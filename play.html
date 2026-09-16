@@ -1,0 +1,42 @@
+// Читаем параметры
+const params = new URLSearchParams(location.search);
+const memeId = params.get('meme') || 'rickroll';
+const maskType = params.get('mask') || 'yandex-forms';
+
+// Находим мем
+const meme = MEMES.find(m => m.id === memeId) || MEMES[0];
+
+// Устанавливаем источник
+if (meme.type === 'video') {
+  video.src = meme.src;
+  video.style.display = 'block';
+  img.style.display = 'none';
+} else {
+  img.src = meme.src;
+  img.style.display = 'block';
+  video.style.display = 'none';
+}
+
+// Меняем заглушку в зависимости от maskType
+function renderFakeService(type) {
+  const header = document.querySelector('.fake-header');
+  const title = document.querySelector('.fake-title');
+  
+  if (type === 'youtube') {
+    header.innerHTML = '<span style="color:#ff0000;font-size:24px;">▶</span> YouTube';
+    title.textContent = 'Загрузка видео...';
+  } else if (type === 'vk-video') {
+    header.innerHTML = '<span style="color:#0077ff;font-size:24px;">VK</span> Видео';
+    title.textContent = 'Обработка...';
+  } else if (type === 'telegram-channel') {
+    header.innerHTML = '<span style="color:#0088cc;font-size:24px;">✈</span> Telegram';
+    title.textContent = 'Загрузка канала...';
+  } else if (type === 'reddit-post') {
+    header.innerHTML = '<span style="color:#ff4500;font-size:24px;">👽</span> Reddit';
+    title.textContent = 'Загрузка обсуждения...';
+  } else {
+    // yandex-forms (по умолчанию)
+    header.innerHTML = '<span style="color:#FC3F1D;font-weight:700;">Я</span>ндекс Формы';
+    title.textContent = 'Загрузка формы...';
+  }
+}
