@@ -1,13 +1,136 @@
-// Читаем параметры
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Загрузка...</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #fff; }
+
+  /* Заглушка */
+  .loading-screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    background: #fff; z-index: 50;
+    transition: opacity 0.3s;
+  }
+  .loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+  .fake-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex; align-items: center;
+    font-size: 20px; font-weight: 600;
+  }
+  .fake-header .logo-yandex { color: #FC3F1D; font-weight: 700; margin-right: 4px; }
+  .fake-header .logo-youtube { color: #ff0000; font-size: 24px; margin-right: 6px; }
+  .fake-header .logo-vk { color: #0077ff; font-size: 24px; margin-right: 6px; }
+  .fake-header .logo-tg { color: #0088cc; font-size: 24px; margin-right: 6px; }
+  .fake-header .logo-reddit { color: #ff4500; font-size: 24px; margin-right: 6px; }
+
+  .loading-content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding-bottom: 10vh;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(0,0,0,0.08);
+    border-top-color: #fc0;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin-bottom: 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 16px; color: #333; margin-bottom: 8px; }
+  .loading-subtext { font-size: 14px; color: #888; }
+
+  .fake-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px; color: #999; text-align: center;
+  }
+
+  /* Контейнер мема */
+  .meme-container {
+    position: fixed; inset: 0;
+    z-index: 1;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .meme-container video,
+  .meme-container img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+  .meme-container img { display: none; }
+
+  .hint {
+    position: fixed; bottom: 30px; left: 0; right: 0;
+    text-align: center; color: rgba(255,255,255,0.9);
+    font-size: 15px; z-index: 100;
+    pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    transition: opacity 0.3s;
+  }
+</style>
+</head>
+<body>
+
+<!-- ЗАГЛУШКА -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="fake-header" id="fakeHeader">
+    <span class="logo-yandex">Я</span>ндекс Формы
+  </div>
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Загрузка формы...</div>
+    <div class="loading-subtext">Пожалуйста, подождите</div>
+  </div>
+  <div class="fake-footer" id="fakeFooter">
+    © Яндекс, 2026 · Конфиденциальность
+  </div>
+</div>
+
+<!-- МЕМ -->
+<div class="meme-container">
+  <video id="memeVideo" playsinline controls preload="auto" muted></video>
+  <img id="memeImage" alt="">
+</div>
+
+<div class="hint" id="hint">Нажмите в любом месте, чтобы включить звук</div>
+
+<script>
+// ============ ДАННЫЕ МЕМОВ ============
+// ВАЖНО: пути относительные, без ведущего слэша
+const MEMES = [
+  { id: 'rickroll', name: 'Rickroll', type: 'video', src: 'm/rickroll.mp4' },
+  // Добавляй сюда свои мемы:
+  // { id: 'cat', name: 'Кот', type: 'image', src: 'm/cat.jpg' },
+];
+
+// ============ ЧТЕНИЕ ПАРАМЕТРОВ ============
 const params = new URLSearchParams(location.search);
 const memeId = params.get('meme') || 'rickroll';
 const maskType = params.get('mask') || 'yandex-forms';
 
-// Находим мем
+// ============ НАХОДИМ МЕМ ============
 const meme = MEMES.find(m => m.id === memeId) || MEMES[0];
 
-// Устанавливаем источник
-if (meme.type === 'video') {
+// ============ ЭЛЕМЕНТЫ ============
+const loadingScreen = document.getElementById('loadingScreen');
+const video = document.getElementById('memeVideo');
+const img = document.getElementById('memeImage');
+const hint = document.getElementById('hint');
+const fakeHeader = document.getElementById('fakeHeader');
+const loadingText = document.getElementById('loadingText');
+const fakeFooter = document.getElementById('fakeFooter');
+
+// ============ УСТАНАВЛИВАЕМ ИСТОЧНИК МЕМА ============
+if (!meme) {
+  document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;">Мем не найден</div>';
+} else if (meme.type === 'video') {
   video.src = meme.src;
   video.style.display = 'block';
   img.style.display = 'none';
@@ -17,26 +140,96 @@ if (meme.type === 'video') {
   video.style.display = 'none';
 }
 
-// Меняем заглушку в зависимости от maskType
+// ============ РЕНДЕР ЗАГЛУШКИ ПО ТИПУ МАСКИ ============
 function renderFakeService(type) {
-  const header = document.querySelector('.fake-header');
-  const title = document.querySelector('.fake-title');
-  
   if (type === 'youtube') {
-    header.innerHTML = '<span style="color:#ff0000;font-size:24px;">▶</span> YouTube';
-    title.textContent = 'Загрузка видео...';
+    fakeHeader.innerHTML = '<span class="logo-youtube">▶</span> YouTube';
+    loadingText.textContent = 'Загрузка видео...';
+    fakeFooter.textContent = '© YouTube, 2026';
+    document.title = 'YouTube';
   } else if (type === 'vk-video') {
-    header.innerHTML = '<span style="color:#0077ff;font-size:24px;">VK</span> Видео';
-    title.textContent = 'Обработка...';
+    fakeHeader.innerHTML = '<span class="logo-vk">VK</span> Видео';
+    loadingText.textContent = 'Обработка видео...';
+    fakeFooter.textContent = '© ВКонтакте, 2026';
+    document.title = 'ВКонтакте';
   } else if (type === 'telegram-channel') {
-    header.innerHTML = '<span style="color:#0088cc;font-size:24px;">✈</span> Telegram';
-    title.textContent = 'Загрузка канала...';
+    fakeHeader.innerHTML = '<span class="logo-tg">✈</span> Telegram';
+    loadingText.textContent = 'Загрузка канала...';
+    fakeFooter.textContent = 'Telegram Web';
+    document.title = 'Telegram';
   } else if (type === 'reddit-post') {
-    header.innerHTML = '<span style="color:#ff4500;font-size:24px;">👽</span> Reddit';
-    title.textContent = 'Загрузка обсуждения...';
+    fakeHeader.innerHTML = '<span class="logo-reddit">👽</span> Reddit';
+    loadingText.textContent = 'Загрузка обсуждения...';
+    fakeFooter.textContent = '© Reddit, 2026';
+    document.title = 'Reddit';
   } else {
-    // yandex-forms (по умолчанию)
-    header.innerHTML = '<span style="color:#FC3F1D;font-weight:700;">Я</span>ндекс Формы';
-    title.textContent = 'Загрузка формы...';
+    // yandex-forms по умолчанию
+    fakeHeader.innerHTML = '<span class="logo-yandex">Я</span>ндекс Формы';
+    loadingText.textContent = 'Загрузка формы...';
+    fakeFooter.textContent = '© Яндекс, 2026 · Конфиденциальность';
+    document.title = 'Яндекс Формы';
   }
 }
+renderFakeService(maskType);
+
+// ============ ЛОГИКА ВОСПРОИЗВЕДЕНИЯ ============
+let activated = false;
+
+if (meme && meme.type === 'video') {
+  // Пытаемся запустить видео без звука сразу
+  video.play().then(() => {
+    hint.style.opacity = '1';
+  }).catch(e => {
+    console.warn('Muted autoplay заблокирован:', e);
+    hint.style.opacity = '1';
+  });
+
+  // Скрываем подсказку, когда видео пошло (если не muted)
+  video.addEventListener('playing', function() {
+    if (!video.muted) hint.style.opacity = '0';
+  });
+
+  // Активация по любому касанию
+  function activate() {
+    if (activated) return;
+    activated = true;
+
+    loadingScreen.classList.add('hidden');
+
+    video.muted = false;
+    video.volume = 1.0;
+    video.currentTime = 0;
+    video.play().then(() => {
+      if (video.requestFullscreen) {
+        video.requestFullscreen().catch(() => {});
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      }
+    }).catch(e => {
+      console.warn('Не удалось запустить со звуком:', e);
+      video.controls = true;
+      hint.textContent = 'Нажмите на видео для просмотра';
+      hint.style.opacity = '1';
+    });
+
+    hint.style.opacity = '0';
+
+    document.removeEventListener('click', activate);
+    document.removeEventListener('touchstart', activate);
+    document.removeEventListener('keydown', activate);
+  }
+
+  document.addEventListener('click', activate, { once: true });
+  document.addEventListener('touchstart', activate, { once: true, passive: true });
+  document.addEventListener('keydown', activate, { once: true });
+
+} else if (meme && meme.type === 'image') {
+  // Для картинки — просто показываем её после короткой задержки
+  setTimeout(() => {
+    loadingScreen.classList.add('hidden');
+    hint.style.display = 'none';
+  }, 800);
+}
+</script>
+</body>
+</html>
