@@ -3,66 +3,259 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎭 RickrAll</title>
+<title>🎭 Мем-маскировщик</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  .subtitle { color: #666; margin-bottom: 32px; font-size: 14px; }
-  
-  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  .section-title { font-weight: 600; font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  
-  .meme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-  .meme-card { border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 700px; margin: 0 auto; padding: 24px 20px 60px; background: #f5f5f7; color: #1c1c1e; }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  .subtitle { color: #666; margin-bottom: 28px; font-size: 14px; }
+
+  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .section-title { font-weight: 600; font-size: 15px; margin-bottom: 14px; }
+
+  .meme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .meme-card { border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.15s; background: #fafafa; }
   .meme-card:hover { border-color: #007aff; }
-  .meme-card.selected { border-color: #007aff; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
-  .meme-card video, .meme-card img { width: 100%; height: 100px; object-fit: cover; display: block; }
-  .meme-card .label { padding: 8px; font-size: 12px; text-align: center; background: #fafafa; }
-  
-  .mask-options { display: flex; flex-direction: column; gap: 10px; }
-  .mask-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .meme-card.selected { border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+  .meme-card video, .meme-card img { width: 100%; height: 90px; object-fit: cover; display: block; background: #000; }
+  .meme-card .label { padding: 8px; font-size: 12px; text-align: center; font-weight: 500; }
+
+  .mask-options { display: flex; flex-direction: column; gap: 8px; }
+  .mask-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
   .mask-option:hover { border-color: #007aff; }
   .mask-option.selected { border-color: #007aff; background: #f0f7ff; }
-  .mask-option input { display: none; }
-  .mask-option .icon { font-size: 24px; }
+  .mask-option .icon { font-size: 22px; flex-shrink: 0; }
   .mask-option .info h4 { font-size: 14px; margin-bottom: 2px; }
   .mask-option .info p { font-size: 12px; color: #888; }
-  
-  .format-options { display: flex; gap: 12px; }
-  .format-option { flex: 1; padding: 16px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; cursor: pointer; }
+
+  .format-options { display: flex; gap: 10px; }
+  .format-option { flex: 1; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .format-option:hover { border-color: #007aff; }
   .format-option.selected { border-color: #007aff; background: #f0f7ff; }
-  .format-option .icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .format-option .icon { font-size: 24px; display: block; margin-bottom: 4px; }
   .format-option .name { font-size: 13px; font-weight: 500; }
-  
-  button.generate { width: 100%; padding: 16px; background: #FC3F1D; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+
+  button.generate { width: 100%; padding: 16px; background: #FC3F1D; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.15s; }
   button.generate:hover { background: #d9351a; }
-  
-  #result { display: none; margin-top: 24px; }
-  #result .link-box { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  #result .link-box code { word-break: break-all; font-size: 13px; background: #f0f0f0; padding: 8px 12px; border-radius: 4px; display: block; margin-top: 8px; }
-  #qr-container { margin-top: 20px; text-align: center; }
-  #qr-container canvas { border-radius: 8px; }
-  
-  .copy-btn { margin-top: 12px; padding: 8px 16px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button.generate:disabled { background: #ccc; cursor: not-allowed; }
+
+  #result { display: none; margin-top: 20px; }
+  .link-box { background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .link-box strong { font-size: 14px; }
+  .link-box code { word-break: break-all; font-size: 13px; background: #f0f0f0; padding: 10px 12px; border-radius: 6px; display: block; margin-top: 8px; font-family: ui-monospace, monospace; }
+  .copy-btn { margin-top: 10px; padding: 8px 16px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
   .copy-btn.copied { background: #34c759; }
+
+  #qr-container { margin-top: 20px; text-align: center; }
+  #qr-container canvas { border-radius: 8px; background: #fff; padding: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  #qr-container .qr-note { font-size: 12px; color: #666; margin-top: 10px; word-break: break-all; }
+  #qr-container .qr-error { color: #ff3b30; font-size: 13px; padding: 12px; background: #fff0f0; border-radius: 8px; }
 </style>
 </head>
 <body>
 
-<h1>🎭 RickrAll</h1>
+<h1>🎭 Мем-маскировщик</h1>
 <p class="subtitle">Создай замаскированную ссылку или QR-код, который приведёт к мему</p>
 
-<!-- ШАГ 1: ВЫБОР МЕМА -->
 <div class="section">
   <div class="section-title">📦 1. Выбери мем</div>
-  <div class="meme-grid" id="memeGrid">
-    <!-- Заполняется скриптом -->
+  <div class="meme-grid" id="memeGrid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">🎭 2. Под что замаскировать?</div>
+  <div class="mask-options" id="maskOptions"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">📤 3. Формат</div>
+  <div class="format-options" id="formatOptions">
+    <div class="format-option selected" data-format="link">
+      <span class="icon">🔗</span>
+      <span class="name">Только ссылка</span>
+    </div>
+    <div class="format-option" data-format="qr">
+      <span class="icon">📱</span>
+      <span class="name">Ссылка + QR</span>
+    </div>
   </div>
 </div>
 
-<!-- ШАГ 2: ТИП МАСКИРОВКИ -->
-<div class="section">
-  <div class="section-title">🎭 2. Под что замаскировать?</div>
+<button class="generate" id="generateBtn" onclick="generate()">✨ Сгенерировать</button>
+
+<div id="result">
+  <div class="link-box">
+    <strong>🔗 Замаскированная ссылка:</strong>
+    <code id="linkOut"></code>
+    <button class="copy-btn" id="copyBtn" onclick="copyLink()">📋 Копировать</button>
+  </div>
+  <div id="qr-container"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// ============ ДАННЫЕ ============
+const MEMES = [
+  { id: 'rickroll', name: 'Rickroll', type: 'video', src: 'm/rickroll.mp4' },
+  // Добавляй сюда свои мемы, например:
+  // { id: 'cat', name: 'Кот', type: 'image', src: 'm/cat.jpg' },
+];
+
+const MASK_OPTIONS = [
+  { id: 'yandex-forms',     icon: '📋', name: 'Яндекс Формы',  desc: 'forms.yandex.ru — выглядит как форма',       domain: 'https://forms.yandex.ru' },
+  { id: 'youtube',          icon: '▶️', name: 'YouTube',        desc: 'youtube.com/watch — как видео',              domain: 'https://www.youtube.com/watch' },
+  { id: 'vk-video',         icon: '🎬', name: 'ВКонтакте',      desc: 'vk.com/video — как ролик',                   domain: 'https://vk.com/video' },
+  { id: 'telegram-channel', icon: '✈️', name: 'Telegram-канал', desc: 't.me/channel — как канал',                   domain: 'https://t.me' },
+  { id: 'reddit-post',      icon: '👽', name: 'Reddit',         desc: 'reddit.com/r/…/comments/… — как обсуждение', domain: 'https://www.reddit.com/r/all/comments' },
+];
+
+// ============ СОСТОЯНИЕ ============
+let selectedMeme = null;
+let selectedMask = null;
+let selectedFormat = 'link';
+
+// ============ РЕНДЕР МЕМОВ ============
+function renderMemes() {
+  const grid = document.getElementById('memeGrid');
+  grid.innerHTML = MEMES.map(m => `
+    <div class="meme-card" data-id="${m.id}">
+      ${m.type === 'video'
+        ? `<video src="${m.src}" muted preload="metadata"></video>`
+        : `<img src="${m.src}" alt="${m.name}" loading="lazy">`}
+      <div class="label">${m.name}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.meme-card').forEach(card => {
+    card.addEventListener('click', () => {
+      selectedMeme = MEMES.find(m => m.id === card.dataset.id);
+      grid.querySelectorAll('.meme-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+}
+
+// ============ РЕНДЕР МАСОК ============
+function renderMasks() {
+  const box = document.getElementById('maskOptions');
+  box.innerHTML = MASK_OPTIONS.map(m => `
+    <div class="mask-option" data-id="${m.id}">
+      <span class="icon">${m.icon}</span>
+      <div class="info">
+        <h4>${m.name}</h4>
+        <p>${m.desc}</p>
+      </div>
+    </div>
+  `).join('');
+  box.querySelectorAll('.mask-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      selectedMask = MASK_OPTIONS.find(m => m.id === opt.dataset.id);
+      box.querySelectorAll('.mask-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+    });
+  });
+}
+
+// ============ ВЫБОР ФОРМАТА ============
+document.querySelectorAll('.format-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    selectedFormat = opt.dataset.format;
+  });
+});
+
+// ============ ГЕНЕРАЦИЯ ============
+async function generate() {
+  console.log('=== ГЕНЕРАЦИЯ ===');
+  console.log('meme:', selectedMeme, 'mask:', selectedMask, 'format:', selectedFormat);
+
+  if (!selectedMeme) { alert('Сначала выбери мем'); return; }
+  if (!selectedMask) { alert('Сначала выбери тип маскировки'); return; }
+
+  // 1. Собираем прямую ссылку на play.html
+  const baseUrl = location.origin + location.pathname.replace(/index\.html$/, '').replace(/\/$/, '');
+  const playUrl = `${baseUrl}/play.html?meme=${encodeURIComponent(selectedMeme.id)}&mask=${encodeURIComponent(selectedMask.id)}`;
+  console.log('playUrl:', playUrl);
+
+  // 2. Маскируем через @
+  const maskedLink = `${selectedMask.domain}@${playUrl.replace(/^https?:\/\//, '')}`;
+  console.log('maskedLink:', maskedLink);
+
+  // 3. Показываем
+  document.getElementById('linkOut').textContent = maskedLink;
+  document.getElementById('result').style.display = 'block';
+
+  // 4. QR-код
+  const qrContainer = document.getElementById('qr-container');
+  qrContainer.innerHTML = '';
+
+  if (selectedFormat !== 'qr') {
+    console.log('Формат не QR — пропускаю');
+    return;
+  }
+
+  if (typeof QRCode === 'undefined') {
+    console.error('QRCode не загружен!');
+    qrContainer.innerHTML = '<div class="qr-error">Библиотека QR не загрузилась. Проверь интернет и обнови страницу.</div>';
+    return;
+  }
+
+  // 5. Сокращаем ссылку, чтобы убрать @ (QR-сканеры его не любят)
+  let shortUrl = maskedLink;
+  try {
+    const res = await fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(maskedLink));
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (text.startsWith('http')) {
+        shortUrl = text;
+        console.log('TinyURL:', shortUrl);
+      }
+    }
+  } catch (e) {
+    console.warn('TinyURL недоступен:', e);
+  }
+
+  // 6. Рисуем QR
+  const canvas = document.createElement('canvas');
+  qrContainer.appendChild(canvas);
+  QRCode.toCanvas(canvas, shortUrl, { width: 240, margin: 2, errorCorrectionLevel: 'H' }, function(err) {
+    if (err) {
+      console.error('Ошибка QR:', err);
+      qrContainer.innerHTML = '<div class="qr-error">Ошибка генерации QR: ' + err.message + '</div>';
+      return;
+    }
+    console.log('✅ QR готов');
+    const note = document.createElement('p');
+    note.className = 'qr-note';
+    note.textContent = 'QR ведёт на: ' + shortUrl;
+    qrContainer.appendChild(note);
+  });
+}
+
+// ============ КОПИРОВАНИЕ ============
+function copyLink() {
+  const text = document.getElementById('linkOut').textContent;
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ Скопировано';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Копировать'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {
+    // fallback для старых браузеров
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => { btn.textContent = '📋 Копировать'; }, 1800);
+  });
+}
+
+// ============ СТАРТ ============
+renderMemes();
+renderMasks();
+</script>
+</body>
+</html>  <div class="section-title">🎭 2. Под что замаскировать?</div>
   <div class="mask-options" id="maskOptions">
     <label class="mask-option" data-mask="yandex-forms">
       <input type="radio" name="mask" value="yandex-forms">
