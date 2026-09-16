@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎭 Мем-маскировщик</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  .subtitle { color: #666; margin-bottom: 32px; font-size: 14px; }
+  
+  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .section-title { font-weight: 600; font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  
+  .meme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .meme-card { border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  .meme-card:hover { border-color: #007aff; }
+  .meme-card.selected { border-color: #007aff; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
+  .meme-card video, .meme-card img { width: 100%; height: 100px; object-fit: cover; display: block; }
+  .meme-card .label { padding: 8px; font-size: 12px; text-align: center; background: #fafafa; }
+  
+  .mask-options { display: flex; flex-direction: column; gap: 10px; }
+  .mask-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .mask-option:hover { border-color: #007aff; }
+  .mask-option.selected { border-color: #007aff; background: #f0f7ff; }
+  .mask-option input { display: none; }
+  .mask-option .icon { font-size: 24px; }
+  .mask-option .info h4 { font-size: 14px; margin-bottom: 2px; }
+  .mask-option .info p { font-size: 12px; color: #888; }
+  
+  .format-options { display: flex; gap: 12px; }
+  .format-option { flex: 1; padding: 16px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; cursor: pointer; }
+  .format-option.selected { border-color: #007aff; background: #f0f7ff; }
+  .format-option .icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .format-option .name { font-size: 13px; font-weight: 500; }
+  
+  button.generate { width: 100%; padding: 16px; background: #FC3F1D; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+  button.generate:hover { background: #d9351a; }
+  
+  #result { display: none; margin-top: 24px; }
+  #result .link-box { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  #result .link-box code { word-break: break-all; font-size: 13px; background: #f0f0f0; padding: 8px 12px; border-radius: 4px; display: block; margin-top: 8px; }
+  #qr-container { margin-top: 20px; text-align: center; }
+  #qr-container canvas { border-radius: 8px; }
+  
+  .copy-btn { margin-top: 12px; padding: 8px 16px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .copy-btn.copied { background: #34c759; }
+</style>
+</head>
+<body>
+
+<h1>🎭 Мем-маскировщик</h1>
+<p class="subtitle">Создай замаскированную ссылку или QR-код, который приведёт к мему</p>
+
+<!-- ШАГ 1: ВЫБОР МЕМА -->
+<div class="section">
+  <div class="section-title">📦 1. Выбери мем</div>
+  <div class="meme-grid" id="memeGrid">
+    <!-- Заполняется скриптом -->
+  </div>
+</div>
+
+<!-- ШАГ 2: ТИП МАСКИРОВКИ -->
+<div class="section">
+  <div class="section-title">🎭 2. Под что замаскировать?</div>
+  <div class="mask-options" id="maskOptions">
+    <label class="mask-option" data-mask="yandex-forms">
+      <input type="radio" name="mask" value="yandex-forms">
+      <span class="icon">📋</span>
+      <div class="info">
+        <h4>Яндекс Формы</h4>
+        <p>forms.yandex.ru — выглядит как форма</p>
+      </div>
+    </label>
+    <label class="mask-option" data-mask="youtube">
+      <input type="radio" name="mask" value="youtube">
+      <span class="icon">▶️</span>
+      <div class="info">
+        <h4>YouTube</h4>
+        <p>youtube.com/watch — как видео с хостинга</p>
+      </div>
+    </label>
+    <label class="mask-option" data-mask="vk-video">
+      <input type="radio" name="mask" value="vk-video">
+      <span class="icon">🎬</span>
+      <div class="info">
+        <h4>ВКонтакте (видео)</h4>
+        <p>vk.com/video — как ролик в соцсети</p>
+      </div>
+    </label>
+    <label class="mask-option" data-mask="telegram-channel">
+      <input type="radio" name="mask" value="telegram-channel">
+      <span class="icon">✈️</span>
+      <div class="info">
+        <h4>Telegram-канал</h4>
+        <p>t.me/channel — как канал в мессенджере</p>
+      </div>
+    </label>
+    <label class="mask-option" data-mask="reddit-post">
+      <input type="radio" name="mask" value="reddit-post">
+      <span class="icon">👽</span>
+      <div class="info">
+        <h4>Reddit (пост)</h4>
+        <p>reddit.com/r/…/comments/… — как обсуждение</p>
+      </div>
+    </label>
+  </div>
+</div>
+
+<!-- ШАГ 3: ФОРМАТ ВЫВОДА -->
+<div class="section">
+  <div class="section-title">📤 3. Формат ссылки</div>
+  <div class="format-options" id="formatOptions">
+    <label class="format-option selected" data-format="link">
+      <span class="icon">🔗</span>
+      <span class="name">Только ссылка</span>
+      <input type="radio" name="format" value="link" checked style="display:none">
+    </label>
+    <label class="format-option" data-format="qr">
+      <span class="icon">📱</span>
+      <span class="name">Ссылка + QR</span>
+      <input type="radio" name="format" value="qr" style="display:none">
+    </label>
+  </div>
+</div>
+
+<button class="generate" onclick="generate()">✨ Сгенерировать</button>
+
+<!-- РЕЗУЛЬТАТ -->
+<div id="result">
+  <div class="link-box">
+    <strong>🔗 Замаскированная ссылка:</strong>
+    <code id="linkOut"></code>
+    <button class="copy-btn" onclick="copyLink()">📋 Копировать</button>
+  </div>
+  <div id="qr-container"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// ========== ДАННЫЕ МЕМОВ ==========
+// Формат: { id, name, type: 'video'|'image', src }
+const MEMES = [
+  { id: 'rickroll', name: 'Rickroll', type: 'video', src: 'm/rickroll.mp4' },
+  { id: 'cat', name: 'Кот', type: 'image', src: 'm/cat.jpg' },
+  // Добавляй свои сюда
+];
+
+// ========== МАСКИРОВОЧНЫЕ ДОМЕНЫ ==========
+const MASK_DOMAINS = {
+  'yandex-forms': 'https://forms.yandex.ru',
+  'youtube': 'https://www.youtube.com/watch',
+  'vk-video': 'https://vk.com/video',
+  'telegram-channel': 'https://t.me',
+  'reddit-post': 'https://www.reddit.com/r/all/comments',
+};
+
+// ========== СОСТОЯНИЕ ==========
+let selectedMeme = null;
+let selectedMask = null;
+let selectedFormat = 'link';
+
+// ========== РЕНДЕР МЕМОВ ==========
+function renderMemes() {
+  const grid = document.getElementById('memeGrid');
+  grid.innerHTML = MEMES.map(m => `
+    <div class="meme-card" data-id="${m.id}" onclick="selectMeme('${m.id}')">
+      ${m.type === 'video' 
+        ? `<video src="${m.src}" muted preload="metadata"></video>` 
+        : `<img src="${m.src}" alt="${m.name}">`}
+      <div class="label">${m.name}</div>
+    </div>
+  `).join('');
+}
+
+function selectMeme(id) {
+  selectedMeme = MEMES.find(m => m.id === id);
+  document.querySelectorAll('.meme-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`.meme-card[data-id="${id}"]`).classList.add('selected');
+}
+
+// ========== ВЫБОР МАСКИ ==========
+document.querySelectorAll('.mask-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.mask-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    opt.querySelector('input').checked = true;
+    selectedMask = opt.dataset.mask;
+  });
+});
+
+// ========== ВЫБОР ФОРМАТА ==========
+document.querySelectorAll('.format-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    opt.querySelector('input').checked = true;
+    selectedFormat = opt.dataset.format;
+  });
+});
+
+// ========== ГЕНЕРАЦИЯ ==========
+function generate() {
+  if (!selectedMeme) { alert('Выбери мем'); return; }
+  if (!selectedMask) { alert('Выбери тип маскировки'); return; }
+
+  // 1. Формируем прямую ссылку на play.html с параметрами
+  const baseUrl = location.origin + location.pathname.replace('index.html', '').replace(/\/$/, '');
+  const playUrl = `${baseUrl}/play.html?meme=${selectedMeme.id}&mask=${selectedMask}`;
+
+  // 2. Маскируем через @ (как ты делал)
+  const maskDomain = MASK_DOMAINS[selectedMask];
+  const maskedLink = `${maskDomain}@${playUrl.replace(/^https?:\/\//, '')}`;
+
+  // 3. Выводим
+  document.getElementById('linkOut').textContent = maskedLink;
+  document.getElementById('result').style.display = 'block';
+
+  // 4. QR-код
+  const qrContainer = document.getElementById('qr-container');
+  qrContainer.innerHTML = '';
+  if (selectedFormat === 'qr') {
+    const canvas = document.createElement('canvas');
+    qrContainer.appendChild(canvas);
+    QRCode.toCanvas(canvas, maskedLink, { width: 220, margin: 2, errorCorrectionLevel: 'H' }, err => {
+      if (err) console.error(err);
+    });
+  }
+}
+
+// ========== КОПИРОВАНИЕ ==========
+function copyLink() {
+  const text = document.getElementById('linkOut').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ Скопировано';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Копировать'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
+renderMemes();
+</script>
+</body>
+</html>
